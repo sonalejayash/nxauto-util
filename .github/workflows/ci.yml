@@ -1,0 +1,36 @@
+name: NX Auto Utility CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '8'
+
+      - name: Build and test
+        run: mvnw.cmd clean test package
+
+      - name: Run NX Auto Utility
+        run: |
+          mkdir C:\temp\nx-workspace\nxutil\input
+          echo <testcase id="ci"/> > C:\temp\nx-workspace\nxutil\input\testcase_ci.xml
+          java -jar target\nxauto-util-1.0.0.jar C:\temp\nx-workspace .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nxauto-util-jar
+          path: target/*.jar
