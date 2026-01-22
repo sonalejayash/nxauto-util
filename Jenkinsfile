@@ -1,15 +1,6 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-    }
-
-    environment {
-        RUNTIME_WORKSPACE = "C:\\temp\\nx-workspace"
-        EXECUTION_ID      = "jenkins-run"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -36,10 +27,10 @@ pipeline {
         stage('Prepare Runtime Workspace') {
             steps {
                 bat '''
-                if not exist %RUNTIME_WORKSPACE%\\nxutil\\input (
-                    mkdir %RUNTIME_WORKSPACE%\\nxutil\\input
+                if not exist C:\\temp\\nx-workspace\\nxutil\\input (
+                    mkdir C:\\temp\\nx-workspace\\nxutil\\input
                 )
-                echo ^<testcase id="ci"/^> > %RUNTIME_WORKSPACE%\\nxutil\\input\\testcase_ci.xml
+                echo <testcase id="ci"/> > C:\\temp\\nx-workspace\\nxutil\\input\\testcase_ci.xml
                 '''
             }
         }
@@ -47,9 +38,8 @@ pipeline {
         stage('Run NX Auto Utility') {
             steps {
                 bat '''
-                set JAR_PATH=%CD%\\target\\nxauto-util-1.0.0-shaded.jar
-                echo Running JAR: %JAR_PATH%
-                java -jar "%JAR_PATH%" %RUNTIME_WORKSPACE% %EXECUTION_ID%
+                echo Running NX Auto Utility
+                java -jar target\\nxauto-util-1.0.0.jar C:\\temp\\nx-workspace jenkins-run
                 '''
             }
         }
@@ -58,7 +48,6 @@ pipeline {
     post {
         success {
             echo 'NX Auto Utility pipeline completed successfully'
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
         failure {
             echo 'NX Auto Utility pipeline failed'
