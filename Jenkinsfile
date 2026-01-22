@@ -1,16 +1,6 @@
 pipeline {
     agent any
 
-    options {
-        timestamps()
-    }
-
-    environment {
-        WORKSPACE_DIR = "C:\\temp\\nx-workspace"
-        INPUT_DIR     = "C:\\temp\\nx-workspace\\nxutil\\input"
-        JAR_NAME      = "nxauto-util-1.0.0.jar"
-    }
-
     stages {
 
         stage('Checkout') {
@@ -19,50 +9,38 @@ pipeline {
             }
         }
 
-        stage('Build & Test') {
+        stage('Build') {
             steps {
                 bat 'mvnw.cmd clean package'
             }
         }
 
-        stage('Verify Build Output') {
+        stage('Prepare Workspace') {
             steps {
                 bat '''
-                echo ===== TARGET DIRECTORY =====
-                dir target
-                '''
-            }
-        }
-
-        stage('Prepare Runtime Workspace') {
-            steps {
-                bat '''
-                if not exist "%INPUT_DIR%" (
-                    mkdir "%INPUT_DIR%"
+                if not exist C:\\temp\\nx-workspace\\nxutil\\input (
+                    mkdir C:\\temp\\nx-workspace\\nxutil\\input
                 )
-
-                echo ^<testcase id="ci"/^> > "%INPUT_DIR%\\testcase_ci.xml"
+                echo ^<testcase id="jenkins"/^> > C:\\temp\\nx-workspace\\nxutil\\input\\testcase_ci.xml
                 '''
             }
         }
 
         stage('Run NX Auto Utility') {
             steps {
-                bat """
-                echo Running NX Auto Utility...
-                java -jar "target\\%JAR_NAME%" "%WORKSPACE_DIR%" jenkins-run
-                """
+                bat '''
+                java -jar target\\nxauto-util-1.0.0.jar C:\\temp\\nx-workspace jenkins-run
+                '''
             }
         }
     }
 
     post {
-        success {
-            echo 'NX Auto Utility pipeline completed successfully'
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-        }
         failure {
             echo 'NX Auto Utility pipeline failed'
+        }
+        success {
+            echo 'NX Auto Utility pipeline succeeded'
         }
     }
 }
