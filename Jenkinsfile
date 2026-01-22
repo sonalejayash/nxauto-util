@@ -6,9 +6,8 @@ pipeline {
     }
 
     environment {
-        WORKSPACE_DIR = "C:\\temp\\nx-workspace"
-        EXECUTION_ID  = "jenkins-run"
-        JAR_NAME      = "nxauto-util-1.0.0-shaded.jar"
+        RUNTIME_WORKSPACE = "C:\\temp\\nx-workspace"
+        EXECUTION_ID      = "jenkins-run"
     }
 
     stages {
@@ -21,29 +20,37 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                bat """
-                mvnw.cmd clean test package
-                """
+                bat 'mvnw.cmd clean test package'
+            }
+        }
+
+        stage('Verify Build Output') {
+            steps {
+                bat '''
+                echo ===== TARGET DIRECTORY =====
+                dir target
+                '''
             }
         }
 
         stage('Prepare Runtime Workspace') {
             steps {
-                bat """
-                if not exist %WORKSPACE_DIR%\\nxutil\\input (
-                    mkdir %WORKSPACE_DIR%\\nxutil\\input
+                bat '''
+                if not exist %RUNTIME_WORKSPACE%\\nxutil\\input (
+                    mkdir %RUNTIME_WORKSPACE%\\nxutil\\input
                 )
-
-                echo ^<testcase id="ci"/^> > %WORKSPACE_DIR%\\nxutil\\input\\testcase_ci.xml
-                """
+                echo ^<testcase id="ci"/^> > %RUNTIME_WORKSPACE%\\nxutil\\input\\testcase_ci.xml
+                '''
             }
         }
 
         stage('Run NX Auto Utility') {
             steps {
-                bat """
-                java -jar target\\%JAR_NAME% %WORKSPACE_DIR% %EXECUTION_ID%
-                """
+                bat '''
+                set JAR_PATH=%CD%\\target\\nxauto-util-1.0.0-shaded.jar
+                echo Running JAR: %JAR_PATH%
+                java -jar "%JAR_PATH%" %RUNTIME_WORKSPACE% %EXECUTION_ID%
+                '''
             }
         }
     }
