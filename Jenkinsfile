@@ -3,12 +3,12 @@ pipeline {
 
     options {
         timestamps()
-        disableConcurrentBuilds()
     }
 
     environment {
-        JAVA_HOME = 'C:\\Program Files\\AdoptOpenJDK\\jdk-8-hotspot'
-        PATH = "${env.JAVA_HOME}\\bin;${env.PATH}"
+        WORKSPACE_DIR = "C:\\temp\\nx-workspace"
+        EXECUTION_ID  = "jenkins-run"
+        JAR_NAME      = "nxauto-util-1.0.0-shaded.jar"
     }
 
     stages {
@@ -21,17 +21,29 @@ pipeline {
 
         stage('Build & Test') {
             steps {
-                bat 'mvnw.cmd clean test package'
+                bat """
+                mvnw.cmd clean test package
+                """
+            }
+        }
+
+        stage('Prepare Runtime Workspace') {
+            steps {
+                bat """
+                if not exist %WORKSPACE_DIR%\\nxutil\\input (
+                    mkdir %WORKSPACE_DIR%\\nxutil\\input
+                )
+
+                echo ^<testcase id="ci"/^> > %WORKSPACE_DIR%\\nxutil\\input\\testcase_ci.xml
+                """
             }
         }
 
         stage('Run NX Auto Utility') {
             steps {
-                bat '''
-                mkdir C:\\temp\\nx-workspace\\nxutil\\input
-                echo ^<testcase id="001"/^> > C:\\temp\\nx-workspace\\nxutil\\input\\testcase_ci.xml
-                java -jar target\\nxauto-util-1.0.0.jar C:\\temp\\nx-workspace .
-                '''
+                bat """
+                java -jar target\\%JAR_NAME% %WORKSPACE_DIR% %EXECUTION_ID%
+                """
             }
         }
     }
@@ -39,12 +51,10 @@ pipeline {
     post {
         success {
             echo 'NX Auto Utility pipeline completed successfully'
+            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
         failure {
             echo 'NX Auto Utility pipeline failed'
-        }
-        always {
-            archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
         }
     }
 }
