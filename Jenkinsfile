@@ -1,6 +1,16 @@
 pipeline {
     agent any
 
+    options {
+        timestamps()
+    }
+
+    environment {
+        WORKSPACE_ROOT = "C:\\temp\\nx-workspace"
+        EXECUTION_ID  = "jenkins-run"
+        NXUTIL_HOME   = "${env.WORKSPACE_ROOT}\\nxutil"
+    }
+
     stages {
 
         stage('Checkout') {
@@ -17,24 +27,26 @@ pipeline {
 
         stage('Prepare Workspace') {
             steps {
-                bat '''
-                if not exist C:\\temp\\nx-workspace\\nxutil\\jenkins-run (
-                    mkdir C:\\temp\\nx-workspace\\nxutil\\jenkins-run
+                bat """
+                if not exist ${NXUTIL_HOME}\\${EXECUTION_ID} (
+                    mkdir ${NXUTIL_HOME}\\${EXECUTION_ID}
                 )
-                if not exist C:\\temp\\nx-workspace\\nxutil\\input (
-                    mkdir C:\\temp\\nx-workspace\\nxutil\\input
+
+                if not exist ${NXUTIL_HOME}\\${EXECUTION_ID}\\input (
+                    mkdir ${NXUTIL_HOME}\\${EXECUTION_ID}\\input
                 )
-                echo ^<testcase id="jenkins"/^> > C:\\temp\\nx-workspace\\nxutil\\input\\testcase_ci.xml
-                '''
+
+                echo ^<testcase id="jenkins"/^> > ${NXUTIL_HOME}\\${EXECUTION_ID}\\input\\testcase_ci.xml
+                """
             }
         }
 
         stage('Run NX Auto Utility') {
             steps {
-                bat '''
+                bat """
                 dir target
-                java -jar target\\nxauto-util-1.0.0.jar C:\\temp\\nx-workspace jenkins-run
-                '''
+                java -jar target\\nxauto-util.jar ${WORKSPACE_ROOT} ${EXECUTION_ID}
+                """
             }
         }
     }
