@@ -8,7 +8,7 @@ pipeline {
     environment {
         WORKSPACE_ROOT = "C:\\temp\\nx-workspace"
         EXECUTION_ID  = "jenkins-run"
-        NXUTIL_HOME   = "${env.WORKSPACE_ROOT}\\nxutil"
+        INPUT_DIR     = "${WORKSPACE_ROOT}\\nxutil\\${EXECUTION_ID}\\input"
     }
 
     stages {
@@ -28,15 +28,9 @@ pipeline {
         stage('Prepare Workspace') {
             steps {
                 bat """
-                if not exist ${NXUTIL_HOME}\\${EXECUTION_ID} (
-                    mkdir ${NXUTIL_HOME}\\${EXECUTION_ID}
-                )
-
-                if not exist ${NXUTIL_HOME}\\${EXECUTION_ID}\\input (
-                    mkdir ${NXUTIL_HOME}\\${EXECUTION_ID}\\input
-                )
-
-                echo ^<testcase id="jenkins"/^> > ${NXUTIL_HOME}\\${EXECUTION_ID}\\input\\testcase_ci.xml
+                if not exist "${WORKSPACE_ROOT}\\nxutil\\${EXECUTION_ID}" mkdir "${WORKSPACE_ROOT}\\nxutil\\${EXECUTION_ID}"
+                if not exist "${INPUT_DIR}" mkdir "${INPUT_DIR}"
+                echo ^<testcase id="jenkins"/^> > "${INPUT_DIR}\\testcase_ci.xml"
                 """
             }
         }
@@ -45,7 +39,7 @@ pipeline {
             steps {
                 bat """
                 dir target
-                java -jar target\\nxauto-util.jar ${WORKSPACE_ROOT} ${EXECUTION_ID}
+                java -jar target\\nxauto-util.jar "${WORKSPACE_ROOT}" "${EXECUTION_ID}"
                 """
             }
         }
