@@ -21,7 +21,7 @@ jobs:
           java-version: '8'
 
       - name: Build and test
-        run: mvnw.cmd clean test package
+        run: ./mvnw clean test package
 
       - name: Run NX Auto Utility
         run: |
