@@ -1,12 +1,13 @@
 # Maven
 target/
-*.log
+test-workspace/
+dependency-reduced-pom.xml
+
+
+# Test workspace artifacts
+test-workspace/
+temp/
 
 # IDE
 .idea/
-.vscode/
 *.iml
-
-# OS
-.DS_Store
-Thumbs.db
