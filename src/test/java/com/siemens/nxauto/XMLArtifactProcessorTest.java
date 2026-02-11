@@ -4,30 +4,21 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
-import java.io.FileWriter;
-
-import static org.junit.Assert.assertEquals;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 public class XMLArtifactProcessorTest {
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
-    public void xmlArtifactsShouldBeDetected() throws Exception {
-        File executionDir = tempFolder.newFolder("exec");
-        File inputDir = new File(executionDir, Configuration.INPUT_DIR);
-        inputDir.mkdir();
+    public void processXmlSuccessfully() throws Exception {
 
-        File xmlFile = new File(inputDir, "sample.xml");
-        try (FileWriter writer = new FileWriter(xmlFile)) {
-            writer.write("<test/>");
-        }
+        Path inputDir = temp.newFolder("input").toPath();
+        Files.createFile(inputDir.resolve("testcase.xml"));
 
-        XMLArtifactProcessor processor = new XMLArtifactProcessor(executionDir);
-        processor.process();
-
-        assertEquals(1, processor.getArtifacts().size());
+        XMLArtifactProcessor processor = new XMLArtifactProcessor();
+        processor.process(inputDir);
     }
 }

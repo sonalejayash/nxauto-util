@@ -3,59 +3,40 @@ package com.siemens.nxauto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class NXAutoUtil {
 
-    private static final Logger LOG = LoggerFactory.getLogger(NXAutoUtil.class);
+    private static final Logger log =
+            LoggerFactory.getLogger(NXAutoUtil.class);
 
     public static void main(String[] args) {
 
-        if (args == null || args.length != 2) {
-            LOG.error("Invalid arguments.");
-            LOG.error("Usage: java -jar nxauto-util.jar <workspace_path> <execution_id>");
-            System.exit(ExitCode.INVALID_ARGUMENTS.getCode());
+        if (args.length < 2) {
+            System.err.println("Usage: nxauto-util <workspace> <executionId>");
+            System.exit(1);
         }
 
-        String workspacePath = args[0];
+        String workspace = args[0];
         String executionId = args[1];
 
-        LOG.info("NX Auto Utility started");
-        LOG.info("Workspace Path : {}", workspacePath);
-        LOG.info("Execution ID   : {}", executionId);
+        log.info("NX Auto Utility started");
+        log.info("Workspace Path : {}", workspace);
+        log.info("Execution ID   : {}", executionId);
 
         try {
-            // Build execution directory path
-            Path executionDirPath = Paths.get(
-                    workspacePath,
-                    Configuration.NXUTIL_DIR,
-                    executionId
-            );
+            Path inputDir =
+                    PathValidator.validateExecutionDirectory(workspace, executionId);
 
-            // Validate directory structure
-            PathValidator.validateExecutionDirectory(executionDirPath);
+            XMLArtifactProcessor processor = new XMLArtifactProcessor();
+            processor.process(inputDir);
 
-            // Convert Path -> File for downstream processing
-            File executionDir = executionDirPath.toFile();
+            log.info("STATUS: SUCCESS");
 
-            // Process XML artifacts
-            XMLArtifactProcessor processor = new XMLArtifactProcessor(executionDir);
-            processor.process();
-
-            // Generate manifest
-            ManifestGenerator generator =
-                    new ManifestGenerator(executionDir, processor.getArtifacts());
-            generator.generate();
-
-            LOG.info("STATUS: SUCCESS");
-            System.exit(ExitCode.SUCCESS.getCode());
-
-        } catch (Exception ex) {
-            LOG.error("STATUS: FAILED");
-            LOG.error("Reason: {}", ex.getMessage(), ex);
-            System.exit(ExitCode.PROCESSING_ERROR.getCode());
+        } catch (Exception e) {
+            log.error("STATUS: FAILED");
+            log.error("Reason: {}", e.getMessage(), e);
+            System.exit(1);
         }
     }
 }

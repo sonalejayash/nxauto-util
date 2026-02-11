@@ -1,47 +1,32 @@
 package com.siemens.nxauto;
 
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class XMLArtifactProcessor {
 
-    private final File executionDir;
-    private final List<File> artifacts = new ArrayList<>();
+    public void process(Path inputDir) {
 
-    public XMLArtifactProcessor(File executionDir) {
-        this.executionDir = executionDir;
-    }
+        try {
+            List<Path> xmlFiles = Files.list(inputDir)
+                    .filter(p -> p.toString().endsWith(".xml"))
+                    .collect(Collectors.toList());
 
-    public XMLArtifactProcessor(java.nio.file.Path executionDir) {
-        this.executionDir = executionDir.toFile();
-    }
+            if (xmlFiles.isEmpty()) {
+                throw new IllegalStateException(
+                        "No XML artifacts found in input directory: " + inputDir
+                );
+            }
 
-    public void process() {
+            for (Path xml : xmlFiles) {
+                System.out.println("Processing XML: " + xml.getFileName());
+            }
 
-        File inputDir = new File(executionDir, Configuration.INPUT_DIR);
-
-        if (!inputDir.exists() || !inputDir.isDirectory()) {
-            throw new IllegalStateException(
-                    "Input directory does not exist or is invalid: " + inputDir.getAbsolutePath()
-            );
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read input directory", e);
         }
-
-        Collection<File> xmlFiles = FileUtils.listFiles(inputDir, new String[]{"xml"}, false);
-
-        if (xmlFiles == null || xmlFiles.isEmpty()) {
-            throw new IllegalStateException(
-                    "No XML artifacts found in input directory: " + inputDir.getAbsolutePath()
-            );
-        }
-
-        artifacts.addAll(xmlFiles);
-    }
-
-    public List<File> getArtifacts() {
-        return artifacts;
     }
 }

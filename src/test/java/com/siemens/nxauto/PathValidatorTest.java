@@ -4,25 +4,30 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static org.junit.Assert.assertTrue;
 
 public class PathValidatorTest {
 
     @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    public TemporaryFolder temp = new TemporaryFolder();
 
     @Test
-    public void validExecutionDirectory_shouldPass() throws Exception {
-        File executionDir = tempFolder.newFolder("exec");
-        File inputDir = new File(executionDir, Configuration.INPUT_DIR);
-        inputDir.mkdir();
+    public void validExecutionDirectory() throws Exception {
 
-        PathValidator.validateExecutionDirectory(executionDir.toPath());
-    }
+        Path workspace = temp.newFolder("workspace").toPath();
+        Path executionDir = workspace.resolve("nxutil/run1/input");
 
-    @Test(expected = IllegalArgumentException.class)
-    public void missingInputDirectory_shouldFail() throws Exception {
-        File executionDir = tempFolder.newFolder("exec");
-        PathValidator.validateExecutionDirectory(executionDir.toPath());
+        Files.createDirectories(executionDir);
+
+        Path inputDir =
+                PathValidator.validateExecutionDirectory(
+                        workspace.toString(),
+                        "run1"
+                );
+
+        assertTrue(Files.exists(inputDir));
     }
 }

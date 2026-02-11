@@ -1,0 +1,7 @@
+git status
+
+git add Jenkinsfile
+
+git commit -m "Fix Jenkinsfile: run shaded jar with main class"
+
+git push origin main
